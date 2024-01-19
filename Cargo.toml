@@ -12,3 +12,7 @@ bevy = { version = "0.11.3" }
 time = "0.3.31"
 rand = "0.8.5"
 bevy_ecs_tilemap = "0.11.1"
+lazy_static = { version = "1.4.0", features = [] }
+
+macroquad = "0.4.4"
+macroquad-tiled = "0.2.0"
