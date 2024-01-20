@@ -5,6 +5,7 @@ mod resources;
 mod components;
 
 // robotics lib stuff
+use crate::systems::setup_minimap;
 use std::collections::HashMap;
 
 use robotics_lib;
@@ -42,6 +43,7 @@ use systems::camera_movement;
 use systems::startup;
 use systems::update_robot_position;
 use systems::update_tilemap;
+use systems::follow_robot_camera;
 /*
 visualizer
 advanced programming course 23-24
@@ -154,8 +156,6 @@ impl Runnable for MyRobot {
     }
 }
 
-
-
 fn visualizer() {
     App::new()
         .add_plugins(
@@ -174,9 +174,10 @@ fn visualizer() {
         .add_plugins(TilemapPlugin)
         .insert_resource(MapInfo { size: 0, last_known_robot_position: (0,0), robot_moving: false})
         .add_systems(Startup, startup)
+        .add_systems(Startup, setup_minimap)
         .add_systems(Update, update_tilemap)
         .add_systems(Update, update_robot_position)
-        .add_systems(Update, camera_movement)
+        .add_systems(Update, follow_robot_camera)
         .run();
 }
 

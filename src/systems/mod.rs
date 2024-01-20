@@ -1,35 +1,21 @@
+use crate::entities::Minimap;
+use bevy::math::UVec2;
+use bevy::ecs::query::Without;
 use bevy::asset::{AssetServer, Handle};
 use bevy::input::Input;
 use bevy::math::Vec3;
-use bevy::prelude::{Camera, Camera2dBundle, Commands, default, Image, KeyCode, OrthographicProjection, Query, Res, ResMut, SpriteBundle, Time, Transform, With};
+use bevy::prelude::{Camera, Camera2dBundle, Commands, default, Image, KeyCode, Query, Res, ResMut, SpriteBundle, Time, Transform, With};
 use crate::resources::MapInfo;
 use crate::components::LastUpdate;
 use bevy_ecs_tilemap::map::{TilemapId, TilemapSize, TilemapTexture, TilemapTileSize, TilemapType};
 use bevy_ecs_tilemap::prelude::{TileBundle, TilePos, TileStorage, TileTextureIndex};
 use bevy_ecs_tilemap::TilemapBundle;
+use bevy::render::camera::OrthographicProjection;
 use rand::{Rng, thread_rng};
 use robotics_lib::world::tile::TileType;
 use crate::{TILE_PIXEL_OFFSET, TILE_PIXEL_SIZE, VISUALIZER_MAP, VISUALIZER_ROBOT_POSITION};
 use crate::entities::VisualizerRobot;
-
-// func to change sprite position based on actual robot position
-pub fn update_robot_position(mut query: Query<(&VisualizerRobot, &mut Transform)>, mut map_info: ResMut<MapInfo>) {
-    // get robot position
-    let data = VISUALIZER_ROBOT_POSITION.lock().unwrap();
-    // check if robot position is different. if it is, then update on screen
-    if (map_info.last_known_robot_position != *data) {
-        // change robot position in gui
-        // robot's x = gui's y and viceversa
-        let (player, mut transform) = query.single_mut();
-        println!("map size: {} - tile_pixel_size {} - x {} - y {} - tile_pixel_offse {}", map_info.size, TILE_PIXEL_SIZE, data.0, data.1, TILE_PIXEL_OFFSET);
-        transform.translation.x = (TILE_PIXEL_SIZE * (data.1 as f32)) + 5.0;
-        transform.translation.y = (map_info.size as f32 * TILE_PIXEL_SIZE) - (TILE_PIXEL_SIZE * (data.0 as f32 + 1.0)) + TILE_PIXEL_OFFSET;
-        println!("{} {}", transform.translation.x, transform.translation.y);
-        println!("{:?}", data);
-        // save new robot position
-        map_info.last_known_robot_position = *data;
-    }
-}
+use bevy::render::camera::Viewport;
 
 pub fn startup(mut commands: Commands, asset_server: Res<AssetServer>, mut map_info: ResMut<MapInfo>) {
     // get visualizer map
@@ -99,6 +85,45 @@ pub fn startup(mut commands: Commands, asset_server: Res<AssetServer>, mut map_i
     );
 }
 
+pub fn setup_minimap(mut commands: Commands) {
+    commands.spawn((
+        Camera2dBundle {
+            camera: Camera {
+                // renders after / on top of other cameras
+                order: 2,
+                // set the viewport to a 256x256 square in the top left corner
+                viewport: Some(Viewport {
+                    physical_position: UVec2::new(0, 0),
+                    physical_size: UVec2::new(256, 256),
+                    ..default()
+                }),
+                ..default()
+            },
+            ..default()
+        },
+        Minimap,
+    ));
+}
+
+// func to change sprite position based on actual robot position
+pub fn update_robot_position(mut query: Query<(&VisualizerRobot, &mut Transform)>, mut map_info: ResMut<MapInfo>) {
+    // get robot position
+    let data = VISUALIZER_ROBOT_POSITION.lock().unwrap();
+    // check if robot position is different. if it is, then update on screen
+    if (map_info.last_known_robot_position != *data) {
+        // change robot position in gui
+        // robot's x = gui's y and viceversa
+        let (player, mut transform) = query.single_mut();
+        println!("map size: {} - tile_pixel_size {} - x {} - y {} - tile_pixel_offse {}", map_info.size, TILE_PIXEL_SIZE, data.0, data.1, TILE_PIXEL_OFFSET);
+        transform.translation.x = (TILE_PIXEL_SIZE * (data.1 as f32)) + 5.0;
+        transform.translation.y = (map_info.size as f32 * TILE_PIXEL_SIZE) - (TILE_PIXEL_SIZE * (data.0 as f32 + 1.0)) + TILE_PIXEL_OFFSET;
+        println!("{} {}", transform.translation.x, transform.translation.y);
+        println!("{:?}", data);
+        // save new robot position
+        map_info.last_known_robot_position = *data;
+    }
+}
+
 // In this example it's better not to use the default `MapQuery` SystemParam as
 // it's faster to do it this way:
 fn random(time: ResMut<Time>, mut query: Query<(&mut TileTextureIndex, &mut LastUpdate)>) {
@@ -166,7 +191,16 @@ fn update_tilemap_debug(time: ResMut<Time>, mut query: Query<(&mut TileTextureIn
     }
 }
 
-//pub fn follow_robot_camera(mut query: Query<&>)
+pub fn follow_robot_camera(
+    mut query: Query<(&mut Transform, &mut OrthographicProjection), With<Camera>>,
+    mut query_robot: Query<&Transform, (With<VisualizerRobot>, Without<Camera>)>) {
+    let robot_transform = query_robot.single();
+    let (mut camera_transform, mut camera_ortho) = query.single_mut();
+
+    camera_transform.translation.x = robot_transform.translation.x;
+    camera_transform.translation.y = robot_transform.translation.y;
+    camera_ortho.scale = 0.6;
+}
 
 pub fn camera_movement(
     time: Res<Time>,
