@@ -1,10 +1,16 @@
+use robotics_lib::runner::{Runnable, Runner};
+use searchtool_unwrap::SearchTool;
+use saver_bot::utils::COIN_LOOKING_FOR;
+use charting_tools::ChartingTools;
+use saver_bot::SaverBot;
+use std::process::Command;
 use crate::entities::Minimap;
 use bevy::math::UVec2;
 use bevy::ecs::query::Without;
 use bevy::asset::{AssetServer, Handle};
 use bevy::input::Input;
 use bevy::math::Vec3;
-use bevy::prelude::{Camera, Camera2dBundle, Commands, default, Image, KeyCode, Query, Res, ResMut, SpriteBundle, Time, Transform, With};
+use bevy::prelude::{Camera, Camera2dBundle, Commands, default, Image, KeyCode, Mut, Query, Res, ResMut, SpriteBundle, Time, Transform, With};
 use crate::resources::MapInfo;
 use crate::components::LastUpdate;
 use bevy_ecs_tilemap::map::{TilemapId, TilemapSize, TilemapTexture, TilemapTileSize, TilemapType};
@@ -16,6 +22,62 @@ use robotics_lib::world::tile::TileType;
 use crate::{TILE_PIXEL_OFFSET, TILE_PIXEL_SIZE, VISUALIZER_MAP, VISUALIZER_ROBOT_POSITION};
 use crate::entities::VisualizerRobot;
 use bevy::render::camera::Viewport;
+use oxagaudiotool::sound_config::OxAgSoundConfig;
+use saver_bot::new_saver_bot;
+use saver_bot::State;
+use worldgen_unwrap::public::WorldgeneratorUnwrap;
+use crate::resources::GameTimer;
+use crate::resources::RunnerTag;
+use charting_tools::charted_map::ChartedMap;
+use robotics_lib::world::tile::Content;
+use std::collections::HashMap;
+use robotics_lib::runner::Robot;
+// 🌯 runner wrapper 🌯
+use crate::wrapper::VisualizerRobotWrapper;
+
+pub fn game_prestartup (mut commands: Commands, mut game_timer: ResMut<GameTimer>) {
+    // Pause timer
+    game_timer.0.pause();
+
+    // Create bot, world, play audio
+    let mut bot = SaverBot::new(Some(1000));
+
+    // Load background music
+    let background_music = OxAgSoundConfig::new_looped_with_volume("assets/default/music.ogg", 2.0);
+
+    // Play background music
+    let _ = bot.audio.play_audio(&background_music);
+
+    // Create robot and world
+    let robot = VisualizerRobotWrapper::new(bot);
+    let mut worldgen = WorldgeneratorUnwrap::init(false, None);
+
+    // Process first tick, add runner to resource
+    let runner = Runner::new(Box::new(robot), &mut worldgen);
+    let _ = match runner {
+        Ok(mut runner) => {
+            let _ = runner.game_tick();
+
+            commands.insert_resource(RunnerTag(runner));
+        }
+        Err(err) => panic!("Error: {:?}", err),
+    };
+
+    game_timer.0.unpause();
+}
+
+pub fn run_tick(time: Res<Time>, mut runner: ResMut<RunnerTag>, mut timer: ResMut<GameTimer>) {
+
+    if timer.0.tick(time.delta()).just_finished() {
+        println!("RUNNING");
+        println!("RUNNING");
+        println!("RUNNING");
+        println!("RUNNING");
+        println!("RUNNING");
+        println!("=========");
+        let _ = runner.0.game_tick();
+    }
+}
 
 pub fn startup(mut commands: Commands, asset_server: Res<AssetServer>, mut map_info: ResMut<MapInfo>) {
     // get visualizer map
@@ -110,7 +172,7 @@ pub fn update_robot_position(mut query: Query<(&VisualizerRobot, &mut Transform)
     // get robot position
     let data = VISUALIZER_ROBOT_POSITION.lock().unwrap();
     // check if robot position is different. if it is, then update on screen
-    if (map_info.last_known_robot_position != *data) {
+    if map_info.last_known_robot_position != *data {
         // change robot position in gui
         // robot's x = gui's y and viceversa
         let (player, mut transform) = query.single_mut();
@@ -143,7 +205,7 @@ pub fn update_tilemap(time: ResMut<Time>, mut query: Query<(&mut TileTextureInde
     let data = VISUALIZER_MAP.lock().unwrap();
     // flatten it
     let flattened = data.clone().unwrap().concat();
-    println!("{:?}", flattened);
+    //println!("{:?}", flattened);
     let current_time = time.elapsed_seconds_f64();
     for (index, (mut tile, mut last_update)) in query.iter_mut().enumerate() {
         if (current_time - last_update.value) > 1.0 {
@@ -169,7 +231,6 @@ pub fn update_tilemap(time: ResMut<Time>, mut query: Query<(&mut TileTextureInde
                     tile.0 = 5
                 }
             }
-            println!("{:?}", tile);
             last_update.value = current_time;
         }
     }
