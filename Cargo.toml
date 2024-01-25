@@ -1,0 +1,24 @@
+[package]
+name = "visualizer"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+robotics_lib = { version = "0.1.21", registry = "kellnr"  }
+# bevy = "0.12.1"
+bevy = { version = "0.11.3" }
+time = "0.3.31"
+rand = "0.8.5"
+bevy_ecs_tilemap = "0.11.1"
+lazy_static = { version = "1.4.0", features = [] }
+saver_bot = { git = "https://github.com/MatteoPossamai/saver_bot" }
+oxagaudiotool = { version = "0.2.0", registry = "kellnr"  }
+worldgen_unwrap = { version = "0.1.0", registry = "kellnr"  }
+recycle_by_ifrustrati = { version = "0.1.0", registry = "kellnr"  }
+asfalt_inator = { version = "0.1.0", registry = "kellnr"  }
+charting_tools = { version = "1.0.0", registry = "kellnr"  }
+arrusticini_destroy_zone = { version = "0.1.0", registry = "kellnr"  }
+searchtool_unwrap = { version = "0.1.1", registry = "kellnr"  }
+holy_crab_best_path = {version = "0.1.4", registry = "kellnr"}
