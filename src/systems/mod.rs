@@ -65,6 +65,7 @@ use crate::wrapper::VisualizerRobotWrapper;
 pub fn game_prestartup(mut commands: Commands, mut game_timer: ResMut<GameTimer>) {
     // Env args
     let args: Vec<String> = env::args().collect();
+    println!("{} {} {}", &args[1], &args[2], &args[3]);
     // Pause timer
     game_timer.0.pause();
 
