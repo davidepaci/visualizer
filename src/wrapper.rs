@@ -8,19 +8,19 @@ use robotics_lib::world::coordinates::Coordinate;
 use robotics_lib::world::World;
 use saver_bot::SaverBot;
 
-pub struct VisualizerRobotWrapper {
-    saver_bot: SaverBot,
+pub struct VisualizerRobotWrapper<T: Runnable> {
+    runnable: T,
 }
 
-impl VisualizerRobotWrapper {
-    pub fn new(saver_bot: SaverBot) -> Self {
-        VisualizerRobotWrapper { saver_bot }
+impl<T: Runnable> VisualizerRobotWrapper<T> {
+    pub fn new(runnable: T) -> Self {
+        Self { runnable }
     }
 }
 
-impl Runnable for VisualizerRobotWrapper {
+impl <T: Runnable>Runnable for VisualizerRobotWrapper<T> {
     fn process_tick(&mut self, world: &mut World) {
-        self.saver_bot.process_tick(world);
+        self.runnable.process_tick(world);
         // save map data
         let mut data = VISUALIZER_MAP.lock().unwrap();
         *data = robot_map(world);
@@ -33,7 +33,7 @@ impl Runnable for VisualizerRobotWrapper {
         *data_time = env_conditions.clone();
         // save energy data
         let mut data_energy = VISUALIZER_ENERGY.lock().unwrap();
-        let energy = self.saver_bot.get_energy().get_energy_level();
+        let energy = self.runnable.get_energy().get_energy_level();
         *data_energy = energy;
     }
 
@@ -41,30 +41,30 @@ impl Runnable for VisualizerRobotWrapper {
         println!();
         println!("{:?}", event);
         println!();
-        self.saver_bot.handle_event(event)
+        self.runnable.handle_event(event)
     }
 
     fn get_energy(&self) -> &Energy {
-        self.saver_bot.get_energy()
+        self.runnable.get_energy()
     }
 
     fn get_energy_mut(&mut self) -> &mut Energy {
-        self.saver_bot.get_energy_mut()
+        self.runnable.get_energy_mut()
     }
 
     fn get_coordinate(&self) -> &Coordinate {
-        self.saver_bot.get_coordinate()
+        self.runnable.get_coordinate()
     }
 
     fn get_coordinate_mut(&mut self) -> &mut Coordinate {
-        self.saver_bot.get_coordinate_mut()
+        self.runnable.get_coordinate_mut()
     }
 
     fn get_backpack(&self) -> &BackPack {
-        self.saver_bot.get_backpack()
+        self.runnable.get_backpack()
     }
 
     fn get_backpack_mut(&mut self) -> &mut BackPack {
-        self.saver_bot.get_backpack_mut()
+        self.runnable.get_backpack_mut()
     }
 }

@@ -3493,6 +3493,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "my_robot"
+version = "0.1.0"
+source = "git+https://github.com/Pattern-Matching-Pioneers/project_feb#23a9c3d09470619d759d826bc661f5b94a8d039c"
+dependencies = [
+ "arrusticini_destroy_zone",
+ "asfalt_inator",
+ "charting_tools",
+ "holy_crab_best_path",
+ "oxagaudiotool",
+ "rand 0.8.5",
+ "recycle_by_ifrustrati",
+ "robotics_lib",
+ "searchtool_unwrap",
+ "worldgen_unwrap",
+]
+
+[[package]]
 name = "naga"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5422,6 +5439,7 @@ dependencies = [
  "charting_tools",
  "holy_crab_best_path",
  "lazy_static",
+ "my_robot",
  "oxagaudiotool",
  "rand 0.8.5",
  "recycle_by_ifrustrati",

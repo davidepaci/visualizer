@@ -54,6 +54,7 @@ use robotics_lib::world::tile::Content;
 use robotics_lib::world::tile::TileType;
 
 use saver_bot::SaverBot;
+use my_robot::MyRobot;
 
 use std::env;
 
@@ -69,29 +70,52 @@ pub fn game_prestartup(mut commands: Commands, mut game_timer: ResMut<GameTimer>
 
     // Create bot, world, play audio
     let coin_amount = &args[1];
-    let mut bot = SaverBot::new(Some(coin_amount.parse::<usize>().unwrap()));
+    let bot_choice = &args[3];
 
     // Load background music
     let background_music = OxAgSoundConfig::new_looped_with_volume("assets/default/music.ogg", 2.0);
 
-    // Play background music
-    let _ = bot.audio.play_audio(&background_music);
-
     // Create robot and world
     let world_path = &args[2];
-    let robot = VisualizerRobotWrapper::new(bot);
-    let mut worldgen = WorldgeneratorUnwrap::init(false, Some(PathBuf::from(world_path.clone())));
+    match bot_choice.as_str() {
+        "0" => {
+            let mut saver_bot = SaverBot::new(Some(coin_amount.parse::<usize>().unwrap()));
+            // Play background music
+            let _ = saver_bot.audio.play_audio(&background_music);
+            let robot = VisualizerRobotWrapper::new(saver_bot);
 
-    // Process first tick, add runner to resource
-    let runner = Runner::new(Box::new(robot), &mut worldgen);
-    let _ = match runner {
-        Ok(mut runner) => {
-            let _ = runner.game_tick();
+            let mut worldgen = WorldgeneratorUnwrap::init(false, Some(PathBuf::from(world_path.clone())));
 
-            commands.insert_resource(RunnerTag(runner));
+            // Process first tick, add runner to resource
+            let runner = Runner::new(Box::new(robot), &mut worldgen);
+            let _ = match runner {
+                Ok(mut runner) => {
+                    let _ = runner.game_tick();
+
+                    commands.insert_resource(RunnerTag(runner));
+                }
+                Err(err) => panic!("Error: {:?}", err),
+            };
+        },
+        "1" => {
+            let anastasia_bot = MyRobot::new();
+            let robot = VisualizerRobotWrapper::new(anastasia_bot);
+
+            let mut worldgen = WorldgeneratorUnwrap::init(false, Some(PathBuf::from(world_path.clone())));
+
+            // Process first tick, add runner to resource
+            let runner = Runner::new(Box::new(robot), &mut worldgen);
+            let _ = match runner {
+                Ok(mut runner) => {
+                    let _ = runner.game_tick();
+
+                    commands.insert_resource(RunnerTag(runner));
+                }
+                Err(err) => panic!("Error: {:?}", err),
+            };
         }
-        Err(err) => panic!("Error: {:?}", err),
-    };
+        _ => {}
+    }
 
     game_timer.0.unpause();
 }
